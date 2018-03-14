@@ -1,5 +1,6 @@
 const Firebird = require( 'node-firebird' )
 const fs = require( 'fs' )
+const path = require('path')
 
 const getReport = (params, output) => {
   return new Promise(async (resolve, reject) => {
@@ -36,7 +37,7 @@ const getReport = (params, output) => {
 
 const saveToFileSystem = (items, output) => {
   try {
-    const fileName =`${output}/produtos.csv`
+    const fileName = path.join(output, 'produtos.csv')
     if ( fs.existsSync( fileName ) ) {
       fs.unlinkSync( fileName )
     }

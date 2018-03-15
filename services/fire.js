@@ -1,55 +1,74 @@
 const Firebird = require( 'node-firebird' )
-const fs = require( 'fs' )
-const path = require('path')
+const { saveToFileSystem } = require('./utils')
 
 const getReport = (params, output) => {
   return new Promise(async (resolve, reject) => {
+    let db
     try {
-      Firebird.attach( params, ( err, db ) => {
-        if (err) reject(err)
-        db.query(`
-         select
-           a.cod_item,
-           b.cod_barras,
-           a.descricao,
-           c.qtd,
-           c.custo_medio,
-           c.preco_atacado
-         from
-           itens as a
-         join
-           barras as b on a.cod_item = b.cod_item
-         join
-           itens_estoque as c on a.cod_item = c.cod_item
-         where
-           b.cod_empresa = 2;`, function(err, items) {
-          if (err) reject(err)
-          const fileName = saveToFileSystem(items, output)
-          db.detach()
-          resolve(`Arquivo criado em: ${fileName}`)
-        })
-      })
+      db = await getDb(params)
+      const items = await query(db, `
+       select
+         a.cod_item,
+         b.cod_barras,
+         a.descricao,
+         c.qtd,
+         c.custo_medio,
+         c.preco_atacado
+       from
+         itens as a
+       join
+         barras as b on a.cod_item = b.cod_item
+       join
+         itens_estoque as c on a.cod_item = c.cod_item
+       where
+         b.cod_empresa = 2;`)
+      const parsedItems = items.map(mapItems).join('\n')
+      const fileName = saveToFileSystem(parsedItems, output)
+      resolve(`Arquivo criado em: ${fileName}`)
     } catch (e) {
       reject(e)
+    } finally {
+      db.detach()
     }
   })
 }
 
-const saveToFileSystem = (items, output) => {
-  try {
-    const fileName = path.join(output, 'produtos.csv')
-    if ( fs.existsSync( fileName ) ) {
-      fs.unlinkSync( fileName )
-    }
-    const outputRaw = items.map(mapItems).join('\n')
-    fs.writeFileSync(fileName, outputRaw)
-    return fileName
-  } catch ( err ) {
-    throw err
-  }
+const getDb = (params) => {
+  return new Promise((resolve, reject) => {
+    Firebird.attach( params, ( err, db ) => {
+      if (err) reject(err)
+      resolve(db)
+    })
+  })
 }
 
-const mapItems = item => `${ item.COD_ITEM };${ item.COD_BARRAS };${ item.DESCRICAO.toString().trim() };${ item.QTD };${ item.CUSTO_MEDIO.toString().replace( '.', ',' ) };0;0;${ item.PRECO_ATACADO ? item.PRECO_ATACADO.replace( '.', ',' ) : 0 };0`
+const query = (db, queryRaw) => {
+  return new Promise((resolve, reject) => {
+    db.query(`
+     select
+       a.cod_item,
+       b.cod_barras,
+       a.descricao,
+       c.qtd,
+       c.custo_medio,
+       c.preco_atacado
+     from
+       itens as a
+     join
+       barras as b on a.cod_item = b.cod_item
+     join
+       itens_estoque as c on a.cod_item = c.cod_item
+     where
+       b.cod_empresa = 2;`, function(err, items) {
+      if (err) reject(err)
+      resolve(items)
+    })
+  })
+}
+
+const mapItems = item => {
+  return `${ item.COD_ITEM };${ item.COD_BARRAS };${ item.DESCRICAO.toString().trim() };${ item.QTD };${ item.CUSTO_MEDIO.toString().replace( '.', ',' ) };0;0;${ item.PRECO_ATACADO ? item.PRECO_ATACADO.replace( '.', ',' ) : 0 };0`
+}
 
 
 module.exports = {

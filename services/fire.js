@@ -13,7 +13,8 @@ const getReport = (params, output) => {
          a.descricao,
          c.qtd,
          c.custo_medio,
-         c.preco_atacado
+         c.preco_atacado,
+         c.preco_venda
        from
          itens as a
        join
@@ -44,30 +45,20 @@ const getDb = (params) => {
 
 const query = (db, queryRaw) => {
   return new Promise((resolve, reject) => {
-    db.query(`
-     select
-       a.cod_item,
-       b.cod_barras,
-       a.descricao,
-       c.qtd,
-       c.custo_medio,
-       c.preco_atacado
-     from
-       itens as a
-     join
-       barras as b on a.cod_item = b.cod_item
-     join
-       itens_estoque as c on a.cod_item = c.cod_item
-     where
-       b.cod_empresa = 2;`, function(err, items) {
+    db.query(queryRaw, function(err, items) {
       if (err) reject(err)
       resolve(items)
     })
   })
 }
 
-const mapItems = item => {
-  return `${ item.COD_ITEM };${ item.COD_BARRAS };${ item.DESCRICAO.toString().trim() };${ item.QTD };${ item.CUSTO_MEDIO.toString().replace( '.', ',' ) };0;0;${ item.PRECO_ATACADO ? item.PRECO_ATACADO.replace( '.', ',' ) : 0 };0`
+const mapItems = ({ COD_ITEM, COD_BARRAS, DESCRICAO, QTD, CUSTO_MEDIO, PRECO_ATACADO, PRECO_VENDA }) => {
+  COD_BARRAS = COD_BARRAS.toString()
+  DESCRICAO = DESCRICAO.toString().trim()
+  CUSTO_MEDIO = CUSTO_MEDIO.toFixed(2).toString().replace( '.', ',' )
+  PRECO_ATACADO = PRECO_ATACADO ? PRECO_ATACADO.toFixed(2).toString().replace( '.', ',' ) : 0
+  PRECO_VENDA = PRECO_VENDA ? PRECO_VENDA.toString().replace( '.', ',' ) : 0
+  return `${ COD_ITEM };${ COD_BARRAS };${ DESCRICAO };${ QTD };${ PRECO_VENDA };${ PRECO_VENDA };${ PRECO_VENDA };${ PRECO_VENDA };${ PRECO_VENDA }`
 }
 
 

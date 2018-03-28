@@ -9,12 +9,13 @@ const getReport = (params, output) => {
       db = await getDb(params)
       const items = await query(db, `
        select
-        a.cod_item,
-        b.cod_barras,
-        a.descricao,
-        c.qtd,
-        c.custo_medio,
-        c.preco_atacado
+         a.cod_item,
+         b.cod_barras,
+         a.descricao,
+         c.qtd,
+         c.custo_medio,
+         c.preco_atacado,
+         c.preco_venda
        from
         itens as a
        join
@@ -63,15 +64,20 @@ const getDb = (params) => {
 
 const query = (db, queryRaw) => {
   return new Promise((resolve, reject) => {
-    db.query( queryRaw, ( err, items ) => {
-      if ( err ) reject( err )
-      resolve( items )
-    } )
-  } )
+    db.query(queryRaw, function(err, items) {
+      if (err) reject(err)
+      resolve(items)
+    })
+  })
 }
 
-const mapItems = item => {
-  return `${ item.COD_ITEM };${ item.COD_BARRAS };${ item.DESCRICAO.toString().trim() };${ item.QTD };${ item.CUSTO_MEDIO.toString().replace( '.', ',' ) };0;0;${ item.PRECO_ATACADO ? item.PRECO_ATACADO.replace( '.', ',' ) : 0 };0`
+const mapItems = ({ COD_ITEM, COD_BARRAS, DESCRICAO, QTD, CUSTO_MEDIO, PRECO_ATACADO, PRECO_VENDA }) => {
+  COD_BARRAS = COD_BARRAS.toString()
+  DESCRICAO = DESCRICAO.toString().trim()
+  CUSTO_MEDIO = CUSTO_MEDIO.toFixed(2).toString().replace( '.', ',' )
+  PRECO_ATACADO = PRECO_ATACADO ? PRECO_ATACADO.toFixed(2).toString().replace( '.', ',' ) : 0
+  PRECO_VENDA = PRECO_VENDA ? PRECO_VENDA.toString().replace( '.', ',' ) : 0
+  return `${ COD_ITEM };${ COD_BARRAS };${ DESCRICAO };${ QTD };${ PRECO_VENDA };${ PRECO_VENDA };${ PRECO_VENDA };${ PRECO_VENDA };${ PRECO_VENDA }`
 }
 
 

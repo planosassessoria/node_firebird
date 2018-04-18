@@ -14,7 +14,8 @@ const getReport = (params, output) => {
         a.descricao,
         c.qtd,
         c.custo_medio,
-        c.preco_atacado
+        c.preco_atacado,
+        c.preco_venda
        from
         itens as a
        join
@@ -32,14 +33,16 @@ const getReport = (params, output) => {
         database: params.DATABASE,
         user: params.USER,
         password: params.PASSWORD,
+        cnpj: params.EMPRESA
       }, items.map( item => {
         return {
           codgProduto: item.COD_ITEM,
-          codgBarras: item.COD_BARRAS.toString().trim(),
+          codgBarra: item.COD_BARRAS.toString().trim(),
           descricao: item.DESCRICAO.toString().trim(),
-          qtd: item.QTD,
-          vlCustoMedio: item.CUSTO_MEDIO,
-          vlAtacado: item.PRECO_ATACADO || .0
+          qtdAtual: item.QTD || .0,
+          vlCustoMedio: item.CUSTO_MEDIO || .0,
+          vlAtacado: item.PRECO_ATACADO || .0,
+          vlVarejo: item.PRECO_VENDA || .0
         }
       } ) )
 

@@ -1,6 +1,13 @@
 const fs = require('fs')
 const path = require('path')
 
+const SQL = ( command, ...params ) => {
+  return {
+    text: command.reduce( ( prev, curr, index ) => prev + '$' + index + curr ),
+    values: params
+  }
+}
+
 const saveToFileSystem = (fileRaw, output) => {
   try {
     const fileName = path.join(output, 'produtos.csv')
@@ -15,5 +22,6 @@ const saveToFileSystem = (fileRaw, output) => {
 }
 
 module.exports = {
-  saveToFileSystem
+  saveToFileSystem,
+  SQL
 }

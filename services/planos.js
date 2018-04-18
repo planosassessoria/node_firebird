@@ -1,11 +1,5 @@
 const { Client } = require( 'pg' )
-
-const SQL = ( command, ...params ) => {
-  return {
-    text: command.reduce( ( prev, curr, index ) => prev + '$' + index + curr ),
-    values: params
-  }
-}
+const { SQL } = require( './utils' )
 
 const update = ( params, items ) => {
   return new Promise( async ( resolve, reject ) => {
